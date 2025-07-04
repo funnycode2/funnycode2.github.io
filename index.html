@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五羽轮比 - 田忌赛马赛制羽毛球比赛</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-table-tennis"></i> 五羽轮比</h1>
+            <p class="subtitle">田忌赛马赛制 - 羽毛球双打轮转比赛</p>
+            <nav class="main-nav">
+                <button class="nav-btn active" onclick="showPage('main')">
+                    <i class="fas fa-home"></i> 主页
+                </button>
+                <button class="nav-btn" onclick="showPage('players')">
+                    <i class="fas fa-users"></i> 人员管理
+                </button>
+                <button class="nav-btn" onclick="showPage('teams')">
+                    <i class="fas fa-flag"></i> 队伍管理
+                </button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <!-- 主页 -->
+            <div id="mainPage" class="page-content active">
+                <!-- 输入区域 -->
+                <section class="input-section">
+                <div class="team-inputs">
+                    <div class="team-card">
+                        <h3><i class="fas fa-users"></i> 红方队伍</h3>
+                        <div class="team-info">
+                            <p><i class="fas fa-info-circle"></i> 选择队伍并安排出场顺序（前5名轮转，6-7号替补）</p>
+                        </div>
+                        <div class="team-selection">
+                            <div class="form-group">
+                                <label for="redTeamSelect">选择红方队伍：</label>
+                                <select id="redTeamSelect" onchange="loadTeamPlayers('red')">
+                                    <option value="">请选择队伍</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="player-order-section" id="redPlayerOrderSection" style="display: none;">
+                            <h4><i class="fas fa-sort-numeric-up"></i> 出场顺序安排</h4>
+                            <div class="player-order-list" id="redPlayerOrderList">
+                                <!-- 出场顺序列表将在这里动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="team-card">
+                        <h3><i class="fas fa-users"></i> 蓝方队伍</h3>
+                        <div class="team-info">
+                            <p><i class="fas fa-info-circle"></i> 选择队伍并安排出场顺序（前5名轮转，6-7号替补）</p>
+                        </div>
+                        <div class="team-selection">
+                            <div class="form-group">
+                                <label for="blueTeamSelect">选择蓝方队伍：</label>
+                                <select id="blueTeamSelect" onchange="loadTeamPlayers('blue')">
+                                    <option value="">请选择队伍</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="player-order-section" id="bluePlayerOrderSection" style="display: none;">
+                            <h4><i class="fas fa-sort-numeric-up"></i> 出场顺序安排</h4>
+                            <div class="player-order-list" id="bluePlayerOrderList">
+                                <!-- 出场顺序列表将在这里动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="generate-section">
+                    <button class="generate-btn" onclick="generateMatches()">
+                        <i class="fas fa-magic"></i> 生成轮转对战
+                    </button>
+                    <div class="action-buttons">
+                        <button class="action-btn sample-btn" onclick="loadSampleData()">
+                            <i class="fas fa-download"></i> 加载示例
+                        </button>
+                        <button class="action-btn import-btn" onclick="showImportModal()">
+                            <i class="fas fa-file-import"></i> 导入数据
+                        </button>
+                        <button class="action-btn export-btn" onclick="exportMatches()">
+                            <i class="fas fa-file-export"></i> 导出名单
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 对战名单显示区域 -->
+            <section class="matches-section" id="matchesSection" style="display: none;">
+                <h2><i class="fas fa-list"></i> 轮转对战安排</h2>
+                <div class="game-rules">
+                    <p><i class="fas fa-info-circle"></i> 比赛规则：双打轮转赛制，第1轮目标10分，第2轮目标20分，...，第5轮目标50分</p>
+                    <p><i class="fas fa-users"></i> 轮转安排：1+2号→2+3号→3+4号→4+5号→5+1号（前5名队员轮转，6-7号作为替补）</p>
+                </div>
+                <div class="match-tabs" id="matchTabs">
+                    <button class="match-tab" data-round="1" onclick="switchMatchTab(1)">第1轮</button>
+                    <button class="match-tab" data-round="2" onclick="switchMatchTab(2)">第2轮</button>
+                    <button class="match-tab" data-round="3" onclick="switchMatchTab(3)">第3轮</button>
+                    <button class="match-tab" data-round="4" onclick="switchMatchTab(4)">第4轮</button>
+                    <button class="match-tab" data-round="5" onclick="switchMatchTab(5)">第5轮</button>
+                </div>
+                <div class="matches-container" id="matchesContainer"></div>
+                
+                <div class="score-summary">
+                    <div class="total-scores">
+                        <div class="score-card red">
+                            <h4>红方预测得分</h4>
+                            <span id="redTotalScore">0</span>
+                        </div>
+                        <div class="score-card blue">
+                            <h4>蓝方预测得分</h4>
+                            <span id="blueTotalScore">0</span>
+                        </div>
+                    </div>
+                    <div class="winner-prediction" id="winnerPrediction"></div>
+                    <div class="save-actions">
+                        <button class="save-match-btn" onclick="saveCurrentMatch()">
+                            <i class="fas fa-save"></i> 保存到历史记录
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 历史记录 -->
+            <section class="history-section">
+                <div class="history-header">
+                    <h2><i class="fas fa-history"></i> 历史记录</h2>
+                    <div class="history-actions">
+                        <button class="action-btn" onclick="exportHistory()">
+                            <i class="fas fa-file-export"></i> 导出历史记录
+                        </button>
+                        <button class="action-btn" onclick="importHistoryFromFile()">
+                            <i class="fas fa-file-import"></i> 导入历史记录
+                        </button>
+                        <button class="clear-history-btn" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i> 清空记录
+                        </button>
+                    </div>
+                </div>
+                <div class="history-container" id="historyContainer"></div>
+                <div class="history-pagination" id="historyPagination"></div>
+            </section>
+            </div>
+
+            <!-- 人员管理页面 -->
+            <div id="playersPage" class="page-content">
+                <section class="players-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> 人员管理</h2>
+                        <div class="header-actions">
+                            <button class="action-btn" onclick="addNewPlayer()">
+                                <i class="fas fa-plus"></i> 添加人员
+                            </button>
+                            <button class="action-btn" onclick="exportPlayers()">
+                                <i class="fas fa-file-export"></i> 导出人员
+                            </button>
+                            <button class="action-btn" onclick="importPlayers()">
+                                <i class="fas fa-file-import"></i> 导入人员
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="players-container" id="playersContainer">
+                        <!-- 人员列表将在这里动态生成 -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- 队伍管理页面 -->
+            <div id="teamsPage" class="page-content">
+                <section class="teams-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-flag"></i> 队伍管理</h2>
+                        <div class="header-actions">
+                            <button class="action-btn" onclick="createNewTeam()">
+                                <i class="fas fa-plus"></i> 创建队伍
+                            </button>
+                            <button class="action-btn" onclick="exportTeams()">
+                                <i class="fas fa-file-export"></i> 导出队伍
+                            </button>
+                            <button class="action-btn" onclick="importTeams()">
+                                <i class="fas fa-file-import"></i> 导入队伍
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="teams-container" id="teamsContainer">
+                        <!-- 队伍列表将在这里动态生成 -->
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 五羽轮比. 让每一场比赛都精彩纷呈！</p>
+        </footer>
+    </div>
+
+    <!-- 导入模态框 -->
+    <div id="importModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-import"></i> 导入对战数据</h3>
+                <span class="close" onclick="closeImportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="import-section">
+                    <h4>选择导入方式：</h4>
+                    <div class="import-options">
+                        <button class="import-option" onclick="importFromFile()">
+                            <i class="fas fa-file-upload"></i> 从文件导入
+                        </button>
+                        <button class="import-option" onclick="importFromText()">
+                            <i class="fas fa-keyboard"></i> 手动输入
+                        </button>
+                        <button class="import-option" onclick="importFromHistory()">
+                            <i class="fas fa-history"></i> 从历史记录导入
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="fileImportSection" class="import-section" style="display: none;">
+                    <h4>文件导入：</h4>
+                    <p>支持导入之前导出的JSON格式文件</p>
+                    <input type="file" id="importFile" accept=".json" onchange="handleFileImport(event)">
+                </div>
+                
+                <div id="textImportSection" class="import-section" style="display: none;">
+                    <h4>手动输入：</h4>
+                    <p>请粘贴JSON格式的对战数据：</p>
+                    <textarea id="importText" placeholder="粘贴JSON数据..." rows="10"></textarea>
+                    <button class="import-btn" onclick="handleTextImport()">导入数据</button>
+                </div>
+                
+                <div id="historyImportSection" class="import-section" style="display: none;">
+                    <h4>历史记录导入：</h4>
+                    <p>选择要导入的历史记录：</p>
+                    <div id="historyImportList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 人员编辑模态框 -->
+    <div id="playerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> 编辑人员信息</h3>
+                <span class="close" onclick="closePlayerModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="playerName">姓名：</label>
+                    <input type="text" id="playerName" placeholder="请输入姓名" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="playerRating">实力评级：</label>
+                    <select id="playerRating">
+                        <option value="1">1级 - 初学者</option>
+                        <option value="2">2级 - 入门</option>
+                        <option value="3">3级 - 基础</option>
+                        <option value="4">4级 - 进阶</option>
+                        <option value="5">5级 - 熟练</option>
+                        <option value="6">6级 - 良好</option>
+                        <option value="7">7级 - 优秀</option>
+                        <option value="8">8级 - 专业</option>
+                        <option value="9">9级 - 大师</option>
+                        <option value="10">10级 - 传奇</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="playerNotes">备注：</label>
+                    <textarea id="playerNotes" placeholder="可选备注信息" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closePlayerModal()">取消</button>
+                    <button class="btn-save" onclick="savePlayer()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 队伍编辑模态框 -->
+    <div id="teamModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-flag"></i> 编辑队伍信息</h3>
+                <span class="close" onclick="closeTeamModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="teamName">队伍名称：</label>
+                    <input type="text" id="teamName" placeholder="请输入队伍名称" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label for="teamColor">队伍颜色：</label>
+                    <select id="teamColor">
+                        <option value="red">红色</option>
+                        <option value="blue">蓝色</option>
+                        <option value="green">绿色</option>
+                        <option value="yellow">黄色</option>
+                        <option value="purple">紫色</option>
+                        <option value="orange">橙色</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>选择队员：</label>
+                    <div class="player-selection">
+                        <div class="available-players">
+                            <h4>可用人员</h4>
+                            <div id="availablePlayersList" class="players-list">
+                                <!-- 可用人员列表 -->
+                            </div>
+                        </div>
+                        <div class="selection-actions">
+                            <button class="btn-add" onclick="addPlayerToTeam()">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button class="btn-remove" onclick="removePlayerFromTeam()">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="selected-players">
+                            <h4>已选队员</h4>
+                            <div id="selectedPlayersList" class="players-list">
+                                <!-- 已选队员列表 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeTeamModal()">取消</button>
+                    <button class="btn-save" onclick="saveTeam()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
